@@ -1,0 +1,45 @@
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    // Corresponds to the cargo alias created earlier
+    provider    = "cargo prisma"
+    // The location to generate the client. Is relative to the position of the schema
+    output      = "../src/prisma.rs"
+    module_path = "db"
+}
+
+model Asset {
+    id            Int             @id @default(autoincrement())
+    created_at    DateTime        @default(now())
+    updated_at    DateTime        @updatedAt
+    deleted_at    DateTime?
+    AssetLocation AssetLocation[]
+}
+
+model AssetLocation {
+    id                   Int                 @id @default(autoincrement())
+    created_at           DateTime            @default(now())
+    updated_at           DateTime            @updatedAt
+    deleted_at           DateTime?
+    location_code        String              @unique @db.VarChar(255)
+    location_name        String              @db.VarChar(255)
+    location_description String              @db.Text
+    parent_loaction      AssetLocation?      @relation("parentChildren", fields: [parent_id], references: [id])
+    parent_id            Int?
+    children_location    AssetLocation[]     @relation("parentChildren")
+    asset                Asset               @relation(fields: [assetId], references: [id])
+    assetId              Int
+    LocationBelonging    LocationBelonging[]
+}
+
+model LocationBelonging {
+    id              Int           @id @default(autoincrement())
+    created_at      DateTime      @default(now())
+    updated_at      DateTime      @updatedAt
+    deleted_at      DateTime?
+    location        AssetLocation @relation(fields: [assetLocationId], references: [id])
+    assetLocationId Int
+}
